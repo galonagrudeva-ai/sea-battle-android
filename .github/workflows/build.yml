@@ -4,6 +4,8 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
@@ -11,30 +13,111 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
-        
-    - name: Install dependencies
+        python-version: '3.8'
+
+    - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y python3-pip git zip unzip openjdk-17-jdk
-        pip3 install buildozer cython
-        
-    - name: Build APK with Buildozer
+        sudo apt-get install -y \
+          python3-pip \
+          build-essential \
+          git \
+          python3-dev \
+          ffmpeg \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixer-dev \
+          libsdl2-ttf-dev \
+          libportmidi-dev \
+          libswscale-dev \
+          libavformat-dev \
+          libavcodec-dev \
+          zlib1g-dev \
+          libgstreamer1.0-0 \
+          gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good \
+          libssl-dev \
+          libsqlite3-dev \
+          wget \
+          lbzip2 \
+          file \
+          curl \
+          cmake \
+          zip \
+          unzip \
+          autoconf \
+          automake \
+          libtool \
+          pkg-config
+
+    - name: Install Buildozer and dependencies
       run: |
+        pip3 install --user --upgrade buildozer
+        pip3 install --user --upgrade cython
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Configure Android SDK
+      run: |
+        mkdir -p ~/.buildozer/android/platform
+        cd ~/.buildozer/android/platform
+        
+        # Create directory for SDK
+        mkdir -p android-sdk
+        
+        # Accept licenses
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.android/android-sdk-license
+        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.android/android-sdk-license
+
+    - name: Build with Buildozer
+      run: |
+        # Create buildozer.spec if not exists
+        if [ ! -f buildozer.spec ]; then
+          buildozer init
+        fi
+        
+        # Update buildozer.spec
+        cat > buildozer.spec << 'EOF'
+[app]
+title = Морской Бой
+package.name = seabattle
+package.domain = com.game
+source.dir = .
+source.main = main.py
+source.include_exts = py,png,jpg,kv,atlas,ttf
+version = 1.0
+requirements = python3,kivy==2.1.0,pygame
+orientation = landscape
+fullscreen = 1
+android.api = 30
+android.minapi = 21
+android.sdk = 24
+android.ndk = 25b
+android.ndk_api = 21
+android.arch = armeabi-v7a
+android.bootstrap = sdl2
+android.allow_resize = 0
+android.entrypoint = org.kivy.android.PythonActivity
+android.pack_py = 1
+log_level = 2
+android.accept_sdk_license = True
+
+[buildozer]
+log_level = 2
+warn_on_root = 1
+EOF
+        
+        # Build the APK
         buildozer android debug
-        
-    - name: List files to debug
-      run: |
-        ls -la
-        ls -la bin/
-        
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
+      
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v2
       with:
-        name: sea-battle-apk
+        name: seabattle-apk
         path: bin/*.apk
