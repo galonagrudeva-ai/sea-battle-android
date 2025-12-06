@@ -7,26 +7,19 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # СТАРАЯ ВЕРСИЯ
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.8'
-
-    - name: Install Buildozer
+    - name: Build APK with Buildozer Docker
       run: |
-        pip install buildozer
-        pip install cython
-
-    - name: Build APK
-      run: |
+        docker run --rm \
+          -v $PWD:/home/user/hostcwd \
+          -v buildozer_docker:/home/user/.buildozer \
+          czaki/buildozer:latest \
+          android debug
         
-        buildozer android debug
-
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
