@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build APK
 
 on:
   push:
@@ -8,20 +8,28 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v2
 
-    - name: Build with Buildozer
-      uses: ArtemSBulgakov/buildozer-action@v1
-      id: buildozer
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        workdir: '.'
-        buildozer_version: '1.5.0'
-        python_version: '3.8'
-        
+        python-version: '3.8'
+
+    - name: Install Buildozer
+      run: |
+        pip install buildozer
+        pip install cython
+
+    - name: Build APK
+      run: |
+        buildozer init
+        buildozer android debug
+
     - name: Upload APK
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
-        name: app
-        path: ${{ steps.buildozer.outputs.filename }}
+        name: seabattle
+        path: bin/*.apk
+        retention-days: 7
