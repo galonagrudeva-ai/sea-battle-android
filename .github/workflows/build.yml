@@ -1,0 +1,56 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          git \
+          python3-pip \
+          zlib1g-dev \
+          libncurses5-dev \
+          libgdbm-dev \
+          libnss3-dev \
+          libssl-dev \
+          libsqlite3-dev \
+          libreadline-dev \
+          libffi-dev \
+          libbz2-dev \
+          swig \
+          libssl-dev \
+          python3-dev \
+          libltdl-dev
+
+    - name: Install Buildozer
+      run: |
+        pip3 install buildozer
+        pip3 install cython
+
+    - name: Build APK
+      run: |
+        buildozer init
+        buildozer android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v2
+      with:
+        name: app
+        path: bin/*.apk
