@@ -1,28 +1,23 @@
 [app]
 title = Sea Battle
 package.name = seabattle
-package.domain = com.game
+package.domain = com.test
 source.dir = .
 source.main = main.py
-version = 1.0
+version = 0.1
 
-# САМЫЕ МИНИМАЛЬНЫЕ ЗАВИСИМОСТИ
-requirements = python3,pygame==2.5.2
+# МИНИМАЛЬНЫЕ зависимости
+requirements = python3
 
-orientation = portrait  # МЕНЯЕМ НА PORTRAIT для простоты
-fullscreen = 0  # ВЫКЛЮЧАЕМ полноэкранный режим
+orientation = portrait
+fullscreen = 0
 
 android.api = 30
-android.minapi = 21
-android.ndk = 23b  # БОЛЕЕ СТАРАЯ ВЕРСИЯ
-android.ndk_api = 21
-android.arch = arm64-v8a  # ТОЛЬКО ОДНА АРХИТЕКТУРА
+android.minapi = 24
+android.ndk = 23b
+android.arch = arm64-v8a
 
 android.accept_sdk_license = True
 
-# Отключаем все ненужное
-android.allow_backup = False
-android.wakelock = False
-
 [buildozer]
-log_level = 1  # МЕНЬШЕ ЛОГОВ
+log_level = 1

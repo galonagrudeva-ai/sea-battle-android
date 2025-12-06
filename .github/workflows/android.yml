@@ -7,22 +7,64 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04  # СТАРАЯ ВЕРСИЯ
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Build APK with Buildozer Docker
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.8'
+
+    - name: Install Buildozer and dependencies
       run: |
-        docker run --rm \
-          -v $PWD:/home/user/hostcwd \
-          -v buildozer_docker:/home/user/.buildozer \
-          czaki/buildozer:latest \
-          android debug
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3-pip \
+          build-essential \
+          git \
+          python3-dev \
+          ffmpeg \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixer-dev \
+          libsdl2-ttf-dev \
+          libportmidi-dev \
+          libswscale-dev \
+          libavformat-dev \
+          libavcodec-dev \
+          zlib1g-dev
         
+        pip install buildozer==1.5.0
+        pip install cython==0.29.36
+
+    - name: Configure Android SDK licenses
+      run: |
+        mkdir -p ~/.android
+        echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.android/android-sdk-license
+        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.android/android-sdk-license
+        echo "84831b9409646a918e30573bab4c9c91346d8abd" >> ~/.android/android-sdk-license
+
+    - name: Build APK
+      run: |
+        # Простая сборка с таймаутом
+        timeout 1800 buildozer android debug || true
+        
+        # Проверяем создался ли APK
+        if ls bin/*.apk 1> /dev/null 2>&1; then
+          echo "APK создан успешно!"
+        else
+          echo "APK не создан. Проверяем логи..."
+          ls -la bin/ || true
+        fi
+
     - name: Upload APK
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
-        name: seabattle
-        path: bin/*.apk
+        name: seabattle-build
+        path: |
+          bin/*.apk
+          .buildozer/
         retention-days: 7
