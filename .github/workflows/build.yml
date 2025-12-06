@@ -1,0 +1,40 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip git zip unzip openjdk-17-jdk
+        pip3 install buildozer cython
+        
+    - name: Build APK with Buildozer
+      run: |
+        buildozer android debug
+        
+    - name: List files to debug
+      run: |
+        ls -la
+        ls -la bin/
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: sea-battle-apk
+        path: bin/*.apk
